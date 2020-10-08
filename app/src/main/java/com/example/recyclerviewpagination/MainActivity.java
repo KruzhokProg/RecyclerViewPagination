@@ -250,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
         List<ProjectsNews> filtered_search_list = new ArrayList<>();
 
         for (ProjectsNews item : list) {
-            if(item.getTitle().contains(searchInput)){
+            if(item.getTitle().toLowerCase().contains(searchInput)){
                 filtered_search_list.add(item);
             }
         }
