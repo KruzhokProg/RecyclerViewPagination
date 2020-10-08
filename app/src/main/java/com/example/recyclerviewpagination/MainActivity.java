@@ -160,7 +160,8 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
                     }
                     else{
                         List<ProjectsNews> output = GetDataFilterByDate(body.getPosts());
-                        if(output.size() != 0) {
+//                        if(output.size() != 0) {
+                        if(!output.isEmpty()) {
                             data.clear();
                             filtered_data.addAll(output);
                             date1s = "";
