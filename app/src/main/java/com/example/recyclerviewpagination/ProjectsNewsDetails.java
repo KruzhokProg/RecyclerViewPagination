@@ -44,7 +44,8 @@ public class ProjectsNewsDetails extends AppCompatActivity {
 
             tvTitleDetail.setText(news.getTitle());
             tvContentDetail.setText(news.getContent());
-            tvDate.setText(news.getPublished_at());
+            String[] dateMas =  news.getPublished_at().replace(".", "T").split("T");
+            tvDate.setText(dateMas[0] + "\n" + dateMas[1]);
 
             Uri imageUri = Uri.parse(IMAGE_PATH + news.getId() + IMAGE_CONF);
             Glide.with(getApplicationContext())

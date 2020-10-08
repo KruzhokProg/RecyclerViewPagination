@@ -57,7 +57,8 @@ public class ProjectsNewsAdapter extends RecyclerView.Adapter<ProjectsNewsViewHo
         ProjectsNewsViewHolder h = holder;
         h.title.setText(data.get(position).getTitle());
         h.anounce.setText(data.get(position).getAnounce());
-        h.publishedDate.setText(data.get(position).getPublished_at());
+        String[] dateMas = data.get(position).getPublished_at().split("T");
+        h.publishedDate.setText(dateMas[0]);
 
         h.img.setAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_transition_animation));
         h.cardView.setAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_scale_animation));

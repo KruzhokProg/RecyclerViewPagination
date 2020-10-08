@@ -11,7 +11,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -42,17 +45,20 @@ import androidx.core.util.Pair;
 
 public class MainActivity extends AppCompatActivity implements OnProjectsNewsListener, ProjectsNewsCallback {
 
+    EditText etSearch;
     NestedScrollView nestedScrollView;
     RecyclerView recyclerView;
     ProgressBar progressBar;
     List<ProjectsNews> data;
     List<ProjectsNews> filtered_data;
+    List<ProjectsNews> searchList;
     ProjectsNewsAdapter adapter;
     int page = 1;
     public static final String date1_pref = "date1";
     public static final String date2_pref = "date2";
     String date1s="", date2s="";
     SharedPreferences mSettings;
+    String searchInput;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,8 +73,10 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
         nestedScrollView = findViewById(R.id.scroll_view);
         recyclerView = findViewById(R.id.rv_news);
         progressBar = findViewById(R.id.progress_bar);
+        etSearch = findViewById(R.id.et_search);
         data = new ArrayList<>();
         filtered_data = new ArrayList<>();
+        searchList = new ArrayList<>();
         mSettings = getSharedPreferences(date1_pref, Context.MODE_PRIVATE);
 
         adapter = new ProjectsNewsAdapter(this,this,this);
@@ -84,6 +92,27 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
                     progressBar.setVisibility(View.VISIBLE);
                     getData(page);
                 }
+            }
+        });
+
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                searchInput = charSequence.toString();
+                data.clear();
+                filtered_data.clear();
+                searchList.clear();
+                getData(1);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
             }
         });
     }
@@ -105,15 +134,30 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
                     if(date1s.equals("") && date2s.equals("")) {
                         filtered_data.clear();
                         data.addAll(body.getPosts());
-                        adapter.setData(data);
+
+                        if(searchInput != null && !searchInput.equals("")){
+                            List<ProjectsNews> output = GetDataFilterBySearchInput(data);
+                            if(!output.isEmpty()) {
+                                searchList.addAll(output);
+                                adapter.setData(searchList);
+                            }
+                            else{
+                                Toast.makeText(MainActivity.this, "Список закончился!", Toast.LENGTH_SHORT).show();
+                                progressBar.setVisibility(View.GONE);
+                            }
+                        }
+                        else {
+                            adapter.setData(data);
+                        }
+
                         adapter.notifyDataSetChanged();
-                        //ViewCompat.setNestedScrollingEnabled(recyclerView, false);
                         progressBar.setVisibility(View.GONE);
                     }
                     else{
-                        if(GetDataFilterByDate(body.getPosts()).size() != 0) {
+                        List<ProjectsNews> output = GetDataFilterByDate(body.getPosts());
+                        if(output.size() != 0) {
                             data.clear();
-                            filtered_data.addAll(GetDataFilterByDate(body.getPosts()));
+                            filtered_data.addAll(output);
                             date1s = "";
                             date2s = "";
                             adapter.setData(filtered_data);
@@ -195,6 +239,19 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
                 .setSingle(false)
                 .setCallback(callback)
                 .show(getSupportFragmentManager(), "TAG_SLYCALENDAR");
+    }
+
+    public List<ProjectsNews> GetDataFilterBySearchInput(List<ProjectsNews> list){
+        List<ProjectsNews> filtered_search_list = new ArrayList<>();
+
+        for (ProjectsNews item : list) {
+            if(item.getTitle().contains(searchInput)){
+                filtered_search_list.add(item);
+            }
+        }
+
+        return filtered_search_list;
+
     }
 
     public List<ProjectsNews> GetDataFilterByDate(List<ProjectsNews> list){
