@@ -134,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
 
                 ProjectsNewsListResponse body = response.body();
 
+                // yet to do
                 if(body.getPages() >= page && response.isSuccessful()) {
                     if(date1s.equals("") && date2s.equals("")) {
                         filtered_data.clear();
