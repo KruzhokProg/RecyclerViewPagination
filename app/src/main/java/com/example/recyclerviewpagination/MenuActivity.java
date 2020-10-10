@@ -51,9 +51,6 @@ public class MenuActivity extends AppCompatActivity implements NavigationView.On
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new TestFragment()).commit();
                 toolbar.setTitle("Профильные классы");
                 break;
-//            case R.id.nav_bus:
-//                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Bus_Fragment()).commit();
-//                break;
             case R.id.nav_login:
                 Toast.makeText(this, "login", Toast.LENGTH_SHORT).show();
                 break;
