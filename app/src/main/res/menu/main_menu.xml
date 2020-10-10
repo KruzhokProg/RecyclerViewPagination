@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_profeducation"
+            android:icon="@drawable/ic_profeducation"
+            android:title="профильные классы" />
+        <item
+            android:id="@+id/nav_director"
+            android:icon="@drawable/ic_director"
+            android:title="руководителям" />
+        <item
+            android:id="@+id/nav_student"
+            android:icon="@drawable/ic_student"
+            android:title="Ученикам" />
+        <item
+            android:id="@+id/nav_parent"
+            android:title="Родителям"
+            android:icon="@drawable/ic_parent"/>
+    </group>
+
+    <item android:title="Profile">
+        <menu>
+            <item
+                android:id="@+id/nav_login"
+                android:icon="@drawable/ic_user"
+                android:title="Login" />
+            <item
+                android:id="@+id/nav_logout"
+                android:icon="@drawable/ic_exit"
+                android:title="Logout" />
+        </menu>
+    </item>
+
+</menu>

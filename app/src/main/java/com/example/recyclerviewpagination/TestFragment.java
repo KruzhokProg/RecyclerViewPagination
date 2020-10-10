@@ -1,14 +1,5 @@
 package com.example.recyclerviewpagination;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityOptionsCompat;
-import androidx.core.view.ViewCompat;
-import androidx.core.widget.NestedScrollView;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,12 +7,24 @@ import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityOptionsCompat;
+import androidx.core.util.Pair;
+import androidx.core.widget.NestedScrollView;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.recyclerviewpagination.adapter.OnProjectsNewsListener;
 import com.example.recyclerviewpagination.adapter.ProjectsNewsAdapter;
@@ -30,6 +33,8 @@ import com.example.recyclerviewpagination.models.ProjectsNews;
 import com.example.recyclerviewpagination.network.ApiClient;
 import com.example.recyclerviewpagination.network.ProjectsNewsApi;
 import com.example.recyclerviewpagination.network.ProjectsNewsListResponse;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -44,16 +49,19 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ru.slybeaver.slycalendarview.SlyCalendarDialog;
 
+import static android.app.Activity.RESULT_OK;
 import static com.example.recyclerviewpagination.utils.Constants.PAGE_LIMIT;
-import androidx.core.util.Pair;
 
-public class MainActivity extends AppCompatActivity implements OnProjectsNewsListener, ProjectsNewsCallback {
+public class TestFragment extends Fragment implements OnProjectsNewsListener, ProjectsNewsCallback, View.OnClickListener {
 
     private static final int REQUEST_CODE_SPEECH_INPUT = 1234;
     EditText etSearch;
     NestedScrollView nestedScrollView;
     RecyclerView recyclerView;
     ProgressBar progressBar;
+    ImageButton mic_btn;
+    FloatingActionButton chooseDateBtn;
+    NavigationView navigationView;
     List<ProjectsNews> data;
     List<ProjectsNews> filtered_data;
     List<ProjectsNews> searchList;
@@ -65,27 +73,32 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
     SharedPreferences mSettings;
     String searchInput;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.activity_main, container, false);
 
-        SharedPreferences settings = this.getSharedPreferences(date1_pref, Context.MODE_PRIVATE);
+        SharedPreferences settings = getContext().getSharedPreferences(date1_pref, Context.MODE_PRIVATE);
         settings.edit().clear().commit();
-        SharedPreferences settings2 = this.getSharedPreferences(date2_pref, Context.MODE_PRIVATE);
+        SharedPreferences settings2 = getContext().getSharedPreferences(date2_pref, Context.MODE_PRIVATE);
         settings2.edit().clear().commit();
 
-        nestedScrollView = findViewById(R.id.scroll_view);
-        recyclerView = findViewById(R.id.rv_news);
-        progressBar = findViewById(R.id.progress_bar);
-        etSearch = findViewById(R.id.et_search);
+        nestedScrollView = view.findViewById(R.id.scroll_view);
+        recyclerView = view.findViewById(R.id.rv_news);
+        progressBar = view.findViewById(R.id.progress_bar);
+        etSearch = view.findViewById(R.id.et_search);
+        mic_btn = view.findViewById(R.id.img_btn_record);
+        chooseDateBtn = view.findViewById(R.id.btn_choose_date);
         data = new ArrayList<>();
         filtered_data = new ArrayList<>();
         searchList = new ArrayList<>();
-        mSettings = getSharedPreferences(date1_pref, Context.MODE_PRIVATE);
+        mSettings = getContext().getSharedPreferences(date1_pref, Context.MODE_PRIVATE);
 
-        adapter = new ProjectsNewsAdapter(this,this,this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        mic_btn.setOnClickListener(this);
+        chooseDateBtn.setOnClickListener(this);
+
+        adapter = new ProjectsNewsAdapter(getContext(),this,this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
 
         getData(page);
@@ -120,96 +133,11 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
 
             }
         });
+
+        return view;
     }
 
-    public void getData(final int page){
-        if(mSettings.contains(date1_pref)) {
-            date1s = mSettings.getString(date1_pref, "");
-            date2s = mSettings.getString(date2_pref, "");
-        }
-        ProjectsNewsApi apiService = ApiClient.getClient().create(ProjectsNewsApi.class);
-        Call<ProjectsNewsListResponse> call = apiService.getProjectsNewsList(page, PAGE_LIMIT);
-        call.enqueue(new Callback<ProjectsNewsListResponse>() {
-            @Override
-            public void onResponse(Call<ProjectsNewsListResponse> call, Response<ProjectsNewsListResponse> response) {
-
-                ProjectsNewsListResponse body = response.body();
-
-                // yet to do
-                if(body.getPages() >= page && response.isSuccessful()) {
-                    if(date1s.equals("") && date2s.equals("")) {
-                        filtered_data.clear();
-                        data.addAll(body.getPosts());
-
-                        if(searchInput != null && !searchInput.equals("")){
-                            List<ProjectsNews> output = GetDataFilterBySearchInput(data);
-                            if(!output.isEmpty()) {
-                                searchList.addAll(output);
-                                adapter.setData(searchList);
-                            }
-                            else{
-                                Toast.makeText(MainActivity.this, "Список закончился!", Toast.LENGTH_SHORT).show();
-                                progressBar.setVisibility(View.GONE);
-                            }
-                        }
-                        else {
-                            adapter.setData(data);
-                        }
-
-                        adapter.notifyDataSetChanged();
-                        progressBar.setVisibility(View.GONE);
-                    }
-                    else{
-                        List<ProjectsNews> output = GetDataFilterByDate(body.getPosts());
-                        if(!output.isEmpty()) {
-                            data.clear();
-                            filtered_data.addAll(output);
-                            date1s = "";
-                            date2s = "";
-                            adapter.setData(filtered_data);
-                            adapter.notifyDataSetChanged();
-                            progressBar.setVisibility(View.GONE);
-                        }
-                        else{
-                            Toast.makeText(MainActivity.this, "Список закончился!", Toast.LENGTH_SHORT).show();
-                            progressBar.setVisibility(View.GONE);
-                        }
-                    }
-
-                }
-                else{
-                    Toast.makeText(MainActivity.this, "Список закончился!", Toast.LENGTH_SHORT).show();
-                    progressBar.setVisibility(View.GONE);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ProjectsNewsListResponse> call, Throwable t) {
-                Toast.makeText(MainActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    @Override
-    public void onProjectsNewsClick(int position) {
-        //Toast.makeText(this, data.get(position).getTitle(), Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onProjectsNewsItemClick(int pos, ImageView imgLogo, TextView date, TextView title) {
-        Intent intent = new Intent(this, ProjectsNewsDetails.class);
-        intent.putExtra("projectsNews", data.get(pos));
-
-        Pair<View, String> p1 = Pair.create((View)imgLogo, "logoTN");
-        Pair<View, String> p2 = Pair.create((View)date, "dateTN");
-        Pair<View, String> p3 = Pair.create((View)title, "titleTN");
-
-        ActivityOptionsCompat optionsCompat = ActivityOptionsCompat.makeSceneTransitionAnimation(this, p1,p2,p3);
-
-        startActivity(intent, optionsCompat.toBundle());
-    }
-
-    public void chooseDate_OnClick(View view) {
+    public void chooseDate() {
         SlyCalendarDialog.Callback callback = new SlyCalendarDialog.Callback(){
 
             @Override
@@ -244,7 +172,95 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
         new SlyCalendarDialog()
                 .setSingle(false)
                 .setCallback(callback)
-                .show(getSupportFragmentManager(), "TAG_SLYCALENDAR");
+                .show(getFragmentManager(), "TAG_SLYCALENDAR");
+    }
+
+
+    @Override
+    public void onProjectsNewsClick(int position) {
+
+    }
+
+    @Override
+    public void onProjectsNewsItemClick(int pos, ImageView imgLogo, TextView date, TextView title) {
+        Intent intent = new Intent(getContext(), ProjectsNewsDetails.class);
+        intent.putExtra("projectsNews", data.get(pos));
+
+        Pair<View, String> p1 = Pair.create((View)imgLogo, "logoTN");
+        Pair<View, String> p2 = Pair.create((View)date, "dateTN");
+        Pair<View, String> p3 = Pair.create((View)title, "titleTN");
+
+        ActivityOptionsCompat optionsCompat = ActivityOptionsCompat.makeSceneTransitionAnimation(getActivity(), p1,p2,p3);
+
+        startActivity(intent, optionsCompat.toBundle());
+    }
+
+    public void getData(final int page){
+        if(mSettings.contains(date1_pref)) {
+            date1s = mSettings.getString(date1_pref, "");
+            date2s = mSettings.getString(date2_pref, "");
+        }
+        ProjectsNewsApi apiService = ApiClient.getClient().create(ProjectsNewsApi.class);
+        Call<ProjectsNewsListResponse> call = apiService.getProjectsNewsList(page, PAGE_LIMIT);
+        call.enqueue(new Callback<ProjectsNewsListResponse>() {
+            @Override
+            public void onResponse(Call<ProjectsNewsListResponse> call, Response<ProjectsNewsListResponse> response) {
+
+                ProjectsNewsListResponse body = response.body();
+
+                // yet to do
+                if(body.getPages() >= page && response.isSuccessful()) {
+                    if(date1s.equals("") && date2s.equals("")) {
+                        filtered_data.clear();
+                        data.addAll(body.getPosts());
+
+                        if(searchInput != null && !searchInput.equals("")){
+                            List<ProjectsNews> output = GetDataFilterBySearchInput(data);
+                            if(!output.isEmpty()) {
+                                searchList.addAll(output);
+                                adapter.setData(searchList);
+                            }
+                            else{
+                                Toast.makeText(getContext(), "Список закончился!", Toast.LENGTH_SHORT).show();
+                                progressBar.setVisibility(View.GONE);
+                            }
+                        }
+                        else {
+                            adapter.setData(data);
+                        }
+
+                        adapter.notifyDataSetChanged();
+                        progressBar.setVisibility(View.GONE);
+                    }
+                    else{
+                        List<ProjectsNews> output = GetDataFilterByDate(body.getPosts());
+                        if(!output.isEmpty()) {
+                            data.clear();
+                            filtered_data.addAll(output);
+                            date1s = "";
+                            date2s = "";
+                            adapter.setData(filtered_data);
+                            adapter.notifyDataSetChanged();
+                            progressBar.setVisibility(View.GONE);
+                        }
+                        else{
+                            Toast.makeText(getContext(), "Список закончился!", Toast.LENGTH_SHORT).show();
+                            progressBar.setVisibility(View.GONE);
+                        }
+                    }
+
+                }
+                else{
+                    Toast.makeText(getContext(), "Список закончился!", Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ProjectsNewsListResponse> call, Throwable t) {
+                Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     public List<ProjectsNews> GetDataFilterBySearchInput(List<ProjectsNews> list){
@@ -255,7 +271,6 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
                 filtered_search_list.add(item);
             }
         }
-
         return filtered_search_list;
     }
 
@@ -287,7 +302,7 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
         return filtered_list;
     }
 
-    public void mic_speach_click(View view) {
+    public void micSpeach() {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
@@ -296,12 +311,12 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
         try {
             startActivityForResult(intent, REQUEST_CODE_SPEECH_INPUT);
         }catch (Exception e){
-            Toast.makeText(this, e.getMessage().toString(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), e.getMessage().toString(), Toast.LENGTH_SHORT).show();
         }
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode)
         {
@@ -310,6 +325,18 @@ public class MainActivity extends AppCompatActivity implements OnProjectsNewsLis
                     ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     etSearch.setText(result.get(0));
                 }
+                break;
+        }
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.btn_choose_date:
+                chooseDate();
+                break;
+            case R.id.img_btn_record:
+                micSpeach();
                 break;
         }
     }

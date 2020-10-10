@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".TestFragment">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -13,7 +13,7 @@
         app:elevation="0dp">
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolBar"
-            app:layout_scrollFlags="scroll|enterAlways"
+            app:layout_scrollFlags="enterAlways"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:elevation="0dp">
@@ -47,8 +47,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    tools:layout_editor_absoluteY="7dp"
-                    android:onClick="mic_speach_click"/>
+                    tools:layout_editor_absoluteY="7dp" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
@@ -100,7 +99,6 @@
         android:layout_gravity="right|bottom"
         android:layout_marginBottom="30dp"
         android:layout_marginRight="30dp"
-        android:onClick="chooseDate_OnClick"
         />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
