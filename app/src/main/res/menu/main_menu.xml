@@ -4,11 +4,11 @@
         <item
             android:id="@+id/nav_profeducation"
             android:icon="@drawable/ic_profeducation"
-            android:title="профильные классы" />
+            android:title="Профильные классы" />
         <item
             android:id="@+id/nav_director"
             android:icon="@drawable/ic_director"
-            android:title="руководителям" />
+            android:title="Руководителям" />
         <item
             android:id="@+id/nav_student"
             android:icon="@drawable/ic_student"
